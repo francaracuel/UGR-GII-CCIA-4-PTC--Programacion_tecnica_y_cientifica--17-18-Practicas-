@@ -1,2 +1,11 @@
-# UGR-GII-CCIA-4-PTC--Programacion_tecnica_y_cientifica--17-18-Practicas-
-Prácticas de la asignatura PTC (4 curso) realizadas en la ETSIIT, UGR en el curso 2017/2018 en Python
+# Prácticas PTC - 4º - UGR - CCIA - ETSIIT - GII
+
+Prácticas realizadas en la asignatura PTC (Programación Técnica y Científica) del grado en Ingeniería Informática en el curso 2017/2018, UGR.
+
+## Autores
+
+
+Francisco Javier Caracuel Beltrán
+
+
+###### GNU General Public License v3.0
