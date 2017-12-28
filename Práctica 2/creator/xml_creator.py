@@ -200,6 +200,12 @@ class Xml:
             # Se crea el nodo que contendrá las respuestas
             answers = ET.SubElement(q, "opciones")
 
+            # Se guarda el tipo de pregunta:
+            # 0: penalizado (un error resta puntuación)
+            # 1: no penalizado (un error no resta puntuación)
+            # 2: varias válidas (hay que marcar varias opciones)
+            question_type = -1
+
             # Se añaden todas las respuestas
             for answer in question[2]:
 
@@ -210,112 +216,43 @@ class Xml:
                 ET.SubElement(ans, "texto").text = answer[0]
                 #ET.SubElement(ans, "valoracion").text = answer[1]
 
+                # Se comprueba el tipo de la pregunta
+                if question_type == -1:
+
+                    # Si la respuesta está comprendida en (0, 100), el tipo
+                    # es "varias válidas"
+                    if int(answer[1]) > 0 and int(answer[1]) < 100:
+                        question_type = 2
+
+                    # Si hay alguna respuesta con un valor negativo, el tipo
+                    # es "penalizado"
+                    elif int(answer[1]) < 0:
+                        question_type = 0
+
+                    # Si la respuesta tiene la puntuación máxima puede ser "no
+                    # penalizado", aunque se debe hacer comprobaciones para
+                    # comprobar que no sea "penalizado"
+                    elif int(answer[1]) == 100:
+                        question_type = 1
+
+                # Solo si el tipo es "penalizado" hay que comprobar si puede
+                # ser "no-penalizado"
+                if question_type == 1 and int(answer[1]) < 0:
+                    question_type = 0
+
+            # Se crea una especie de switch/case equivalente en Python
+            switcher = {
+                0: "penalizado",
+                1: "no-penalizado",
+                2: "varias-validas"
+            }
+
+            # Se añade al fichero xml
+            ET.SubElement(q, "tipo").text = switcher.get(question_type)
+
         tree = ET.ElementTree(root)
 
         return tree.write(self.filename.replace(".", "_"+self.test+".", -1))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def generate_data(self):
-        """
-        Genera el contenido de interés que se quiere obtener del fichero XML
-        """
-
-        # La fecha es la segunda etiqueta
-        self.date = self.root.find("./elaborado").text.replace('T',' ')
-
-        # La ciudad a la que pertenece es la segunda etiqueta
-        self.city = self.root.find("./provincia").text
-
-        # Las predicciones de los siguientes días son la quinta etiqueta.
-        # Se obtienen las predicciones de todos los días
-        self.predictions = self.generate_predictions( \
-                                    self.root.findall("./prediccion/dia"))
-
-    def generate_predictions(self, label_predicitions):
-        """
-        Obtiene la predicción de los siguientes 7 días
-        """
-
-        # Vector con las predicciones de los diferentes días
-        predictions = dict()
-
-        # Se recorren las etiquetas hijas de "prediccion"
-        for pred in label_predicitions:
-
-            # Cada día tendrá un diccionario con los valores correspondientes
-            # a cada tipo de dato
-            prediction = dict()
-
-            # Se guarda la fecha de la predicción
-            prediction['date'] = pred.attrib.get('fecha')
-
-            # La probabilidad de precipitación puede aparecer en varios
-            # intervalos, pero el que interesa es el primero que indica el
-            # dia completo
-            #prediction['rain'] = pred[0].text if pred[0].text is None else 0
-            prediction['rain'] = pred[0].text if pred[0].text is not None else 0
-
-            # Se guarda la dirección y velocidad del viento (en ese orden en la
-            # tupla)
-            wind = pred.find("./viento")
-            prediction['wind'] = (wind[0].text if wind[0].text is not None \
-                                        else "", \
-                                    wind[1].text if wind[1].text is not None \
-                                        else 0)
-
-            # Se guarda la temperatura máxima y mínima (en ese orden en la
-            # tupla)
-            temperature = pred.find("./temperatura")
-            prediction['temperature'] = (temperature.find("./maxima").text, \
-                                            temperature.find("./minima").text)
-
-            # Se guarda el diccionario de esta predicción en el contenedor de
-            # todas las predicciones
-            #predictions.append(prediction)
-
-            predictions[prediction['date']] = prediction
-
-        # Se devuelven las predicciones
-        return predictions
-
-    def to_string(self):
-        """
-        Devuelve el contenido del XML como un string
-        """
-
-        res = "Fecha: "+self.date
-        res += "\nCiudad: "+self.city
-        res += "\nPredicciones:\n"
-
-        for prediction in self.predictions:
-
-            res += "\t-Fecha: "+prediction['date']
-            res += "\t-Lluvia (%): "+str(prediction['rain'])
-            res += "\t-Viento (Dirección, Velocidad (km/h)): "+str(prediction['wind'])
-            res += "\t-Temperatura (C): "+str(prediction['temperature'])
-
-            res += "\n"
-
-        return res
 
     #
     ########
