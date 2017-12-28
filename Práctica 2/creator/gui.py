@@ -205,7 +205,8 @@ class Gui:
             # Se añade el título de la ventana principal
             self.root.title(self.title)
 
-            #self.root.resizable(0,0)
+            # Se impide que se pueda redimensionar la ventana
+            self.root.resizable(0,0)
 
             # Se añade el tamaño de la ventana
             self.root.geometry(str(self.window_width)+"x"+str(self.window_height))
@@ -234,6 +235,9 @@ class Gui:
             # cuando se detecta un movimiento del ratón, se ajusta
             self.root.bind('<Enter>', self.on_configure)
             self.root.bind('<Leave>', self.on_configure)
+
+            # Se centra la ventana
+            self.center(self.root)
 
             # Se añade la ventana principal
             #self.root.grid()
@@ -717,7 +721,7 @@ class Gui:
         self.filename = askopenfilename(defaultextension=".xml", \
                                         filetypes=[("Archivos XML","*.xml")])
 
-        print(self.filename)
+        #print(self.filename)
 
     def dialog_save_file(self):
         """
@@ -729,6 +733,20 @@ class Gui:
                                         filetypes=[("Archivos XML","*.xml")])
 
         #print(self.filename)
+
+    def center(self, toplevel):
+        """
+        Centra en pantalla el elemento que recibe.
+        Referencia: https://stackoverflow.com/questions/3352918/how-to-center-a-window-on-the-screen-in-tkinter
+        """
+
+        toplevel.update_idletasks()
+        w = toplevel.winfo_screenwidth()
+        h = toplevel.winfo_screenheight()
+        size = tuple(int(_) for _ in toplevel.geometry().split('+')[0].split('x'))
+        x = w/2 - size[0]/2
+        y = h/2 - size[1]/2
+        toplevel.geometry("%dx%d+%d+%d" % (size + (x, y)))
 
     #
     ########
