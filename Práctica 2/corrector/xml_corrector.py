@@ -17,6 +17,8 @@ preguntas y respuestas de un fichero xml
 """
 
 import xml.etree.ElementTree as ET
+import matplotlib.pyplot as plt
+import numpy as np
 
 ################################################################################
 # Clase Xml
@@ -34,6 +36,12 @@ class Xml:
         Inicializa todos los elementos necesarios para que se pueda guardar o
         cargar la información del fichero xml para crear tests
         """
+
+        self.filename_graph = "stats.png"
+
+        self.graph_title = "Resultados de los tests"
+        self.graph_x = "Calificaciones"
+        self.graph_y = "Número de tests"
 
     #
     ########
@@ -202,21 +210,30 @@ class Xml:
             # Se crea el nodo con la calificación del test
             ET.SubElement(t, "calificacion").text = str(test[3])
 
+            # Se crea el nodo con las preguntas
             questions = ET.SubElement(t, "preguntas")
 
             # Se recorren las respuestas
             for i, question in enumerate(test[1]):
 
+                # Se añade el nodo con cada pregunta
                 q = ET.SubElement(questions, "pregunta", numero=str(i+1))
 
+                # Se le asigna al nodo pregunta la pregunta correspondiente
                 q.text = str(test[2][i][1])
 
+                # Por cada pregunta se crea un nodo respuestas
                 answers = ET.SubElement(q, "respuestas")
 
                 for j, ans in enumerate(question):
 
-                    ET.SubElement(answers, "respuesta", numero=str(ans)).text = str(test[2][i][0][j])
+                    # Por cada respuesta se añade cuál ha sido y el valor
+                    # obtenido
+                    ET.SubElement(answers, "respuesta", \
+                                numero=str(ans)).text = str(test[2][i][0][j])
 
+        # Se crea el gráfico
+        self.create_graph()
 
         tree = ET.ElementTree(root)
 
@@ -226,6 +243,10 @@ class Xml:
         """
         Corrige las preguntas de los tests
         """
+
+        # Se guardan los datos para pintar la gráfica de manera cómoda. Primero
+        # se inicializan los posibles  valores de [0,10] con 0 elementos
+        self.graph = np.zeros(11)
 
         # Se recorren los tests
         for test in self.tests:
@@ -270,11 +291,45 @@ class Xml:
             if total < 0:
                 total = 0
 
+            # Se guarda en la estructura de datos la calificación final
             test.append(total)
 
-            print(test)
+            # Se guarda en la lista para la gráfica las calificaciones
+            self.graph[round(total)] += 1
 
         return True
+
+    def create_graph(self):
+        """
+        Crea una gráfica y la guarda en un fichero con el mismo nombre que el
+        que contiene las correcciones en xml
+        """
+
+        # Se pintan los datos de los tests
+        plt.bar(range(0, 11), self.graph, color='#6495ed')
+
+        plt.xticks(range(0, 11))
+
+        # Se indica el título de la gráfica
+        plt.title(self.graph_title)
+
+        # Se indica el título del eje X
+        plt.xlabel(self.graph_x)
+
+        # Se indica el título del eje Y
+        plt.ylabel(self.graph_y)
+
+        # Se muestra la rejilla
+        plt.grid(True)
+
+        # Se habilita la leyenda
+        plt.legend()
+
+        # Se guarda la gráfica en un fichero
+        plt.savefig(self.filename_result.replace(".xml", \
+                                                "_"+self.filename_graph, -1))
+
+        #plt.show()
 
     #
     ########
